@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.IO;
 
 namespace GZipTest.Logic.Tests
 {
@@ -13,7 +14,11 @@ namespace GZipTest.Logic.Tests
         public void CompressDecompressTest()
         {
             const string inFile = "original.dat";
-            DataGenerator.Generate(inFile, 1);
+            if (!File.Exists(inFile))
+            {
+                DataGenerator.Generate(inFile, 1);
+            }
+
             var compressor = new Compressor();
             const string compressed = "compressed.dat";
             compressor.Compress(inFile, compressed);
