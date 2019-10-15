@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.IO.Compression;
+﻿using System.IO;
 
 namespace GZipTest.Logic
 {
@@ -8,18 +6,21 @@ namespace GZipTest.Logic
     {
         public void Compress(string input, string output)
         {
-            using(var reader = new FixedSizeReader(input, 1))
-            using(var writerStream = new FileStream(output, FileMode.Create))
+            using (var readStream = new FileStream(input, FileMode.Open))
             {
-                var writer = new OrderedWriter(writerStream, new CompressedFormatter());
-
-                DataChunk chunk = null;
-                var processor = new DataChunkCompressProcessor();
-                while((chunk = reader.ReadNext()) != null)
+                var reader = new FixedSizeReader(readStream, 1);
+                using (var writerStream = new FileStream(output, FileMode.Create))
                 {
-                    processor.Process(chunk, writer);
+                    var writer = new OrderedWriter(writerStream, new CompressedFormatter());
+
+                    DataChunk chunk = null;
+                    var processor = new DataChunkCompressProcessor();
+                    while ((chunk = reader.ReadNext()) != null)
+                    {
+                        processor.Process(chunk, writer);
+                    }
+                    writer.Close();
                 }
-                writer.Close();
             }
         }
     }

@@ -5,23 +5,23 @@ using System.Text;
 
 namespace GZipTest.Logic
 {
-    internal class FixedSizeReader : IDisposable
+    internal class FixedSizeReader
     {
-        private readonly FileStream _stream;
+        private readonly Stream _readStream;
         private readonly int _sizeInBytes;
 
         private int _cnt = -1;
 
-        public FixedSizeReader(string fileName, int sizeInMb)
+        public FixedSizeReader(Stream readStream, int sizeInMb)
         {
-            _stream = new FileStream(fileName, FileMode.Open);
+            _readStream = readStream;
             _sizeInBytes = sizeInMb * 1048576;
         }
 
         public DataChunk ReadNext()
         {
             var buffer = new byte[_sizeInBytes];
-            var readed = _stream.Read(buffer);
+            var readed = _readStream.Read(buffer);
             if(readed == 0)
             {
                 return null;
@@ -37,27 +37,5 @@ namespace GZipTest.Logic
 
             return new DataChunk(_cnt, buffer);
         }
-
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    _stream.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        #endregion
     }
 }
