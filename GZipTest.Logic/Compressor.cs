@@ -11,10 +11,10 @@ namespace GZipTest.Logic
             using(var reader = new FixedSizeReader(input, 1))
             using(var writerStream = new FileStream(output, FileMode.Create))
             {
-                var writer = new OrderedWriter(writerStream);
+                var writer = new OrderedWriter(writerStream, new CompressedFormatter());
 
                 DataChunk chunk = null;
-                var processor = new DataChunkProcessor();
+                var processor = new DataChunkCompressProcessor();
                 while((chunk = reader.ReadNext()) != null)
                 {
                     processor.Process(chunk, writer);
