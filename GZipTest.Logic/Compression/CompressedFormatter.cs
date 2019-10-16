@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace GZipTest.Logic
+namespace GZipTest.Logic.Compression
 {
     internal class CompressedFormatter : IEncoder
     {

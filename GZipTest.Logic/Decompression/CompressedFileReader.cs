@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
-namespace GZipTest.Logic
+namespace GZipTest.Logic.Decompression
 {
-    class CompressedFileReader
+    internal class CompressedFileReader : IFileReader
     {
         private int _cnt = -1;
 

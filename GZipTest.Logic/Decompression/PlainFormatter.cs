@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace GZipTest.Logic
+namespace GZipTest.Logic.Decompression
 {
     internal class PlainFormatter : IEncoder
     {

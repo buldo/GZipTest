@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
-namespace GZipTest.Logic
+namespace GZipTest.Logic.Compression
 {
-    internal class FixedSizeReader
+    internal class FixedSizeReader : IFileReader
     {
         private readonly Stream _readStream;
         private readonly int _sizeInBytes;
@@ -22,13 +20,13 @@ namespace GZipTest.Logic
         {
             var buffer = new byte[_sizeInBytes];
             var readed = _readStream.Read(buffer);
-            if(readed == 0)
+            if (readed == 0)
             {
                 return null;
             }
 
             _cnt++;
-            if(readed < buffer.Length)
+            if (readed < buffer.Length)
             {
                 var newBuffer = new byte[readed];
                 Array.Copy(buffer, 0, newBuffer, 0, readed);

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using GZipTest.Logic.Decompression;
 using System.IO;
-using System.Text;
 
 namespace GZipTest.Logic
 {
@@ -10,20 +8,13 @@ namespace GZipTest.Logic
         public void Decompress(string input, string output)
         {
             using (var readStream = new FileStream(input, FileMode.Open))
+            using (var writeStream = new FileStream(output, FileMode.Create))
             {
                 var reader = new CompressedFileReader(readStream);
-                using (var writeStream = new FileStream(output, FileMode.Create))
-                {
-                    var writer = new OrderedWriter(writeStream, new PlainFormatter());
+                var writer = new OrderedWriter(writeStream, new PlainFormatter());
 
-                    DataChunk chunk = null;
-                    var processor = new DataChunkDecompressProcessor();
-                    while ((chunk = reader.ReadNext()) != null)
-                    {
-                        processor.Process(chunk, writer);
-                    }
-                    writer.Close();
-                }
+                var worker = new Worker(reader, writer, () => new DataChunkDecompressProcessor());
+                worker.Process();
             }
         }
     }
