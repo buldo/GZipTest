@@ -21,10 +21,14 @@ namespace GZipTest.Logic.Decompression
             using (var gzStream = new GZipStream(compressedStream, CompressionMode.Decompress))
             {
                 var buffer = RentBuffer();
-                using (var decompressedStream = new MemoryStream())
+                using (var decompressedStream = new MemoryStream(buffer))
                 {
                     gzStream.CopyTo(decompressedStream);
-                    processed = new DataChunk(chunk.Number, decompressedStream.ToArray());
+
+                    var decompressed = new byte[decompressedStream.Position];
+                    decompressedStream.Position = 0;
+                    decompressedStream.Read(decompressed);
+                    processed = new DataChunk(chunk.Number, decompressed);
                 }
 
                 _pool.Return(buffer);

@@ -21,7 +21,10 @@ namespace GZipTest.Logic.Compression
                     gzStream.Flush();
                 }
 
-                processed = new DataChunk(chunk.Number, memoryStream.ToArray());
+                var compressed = new byte[memoryStream.Position];
+                memoryStream.Position = 0;
+                memoryStream.Read(compressed);
+                processed = new DataChunk(chunk.Number, compressed);
             }
 
             _pool.Return(buffer);
