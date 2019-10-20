@@ -1,30 +1,60 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace GZipTest.Logic
 {
     internal class Worker
     {
-        private readonly IFileReader _fileReader;
         private readonly OrderedWriter _writer;
-        private readonly Func<IDataChunkProcessor> _processorFactory;
+        private readonly IDataChunkProcessor[] _processors;
+        private readonly Prefetcher _prefetcher;
+        private readonly ManualResetEventSlim _readEndedEvent = new ManualResetEventSlim(false);
 
-        public Worker(IFileReader fileReader, OrderedWriter writer, Func<IDataChunkProcessor> processorFactory)
+        public Worker(
+            IFileReader fileReader,
+            OrderedWriter writer,
+            Func<IDataChunkProcessor> processorFactory)
         {
-            _fileReader = fileReader;
+            _prefetcher = new Prefetcher(fileReader, 20, 5);
+            _prefetcher.Ended += PrefetcherOnEnded;
             _writer = writer;
-            _processorFactory = processorFactory;
+            _processors = new IDataChunkProcessor[Environment.ProcessorCount];
+            for(int i = 0; i < Environment.ProcessorCount; i++)
+            {
+                _processors[i] = processorFactory();
+            }
         }
 
         public void Process()
         {
-            DataChunk chunk = null;
-            var processor = _processorFactory();
-            while ((chunk = _fileReader.ReadNext()) != null)
+            var semaphore = new SemaphoreSlim(_processors.Length, _processors.Length);
+            var processor = _processors[0];
+            while (!_readEndedEvent.IsSet)
             {
-                processor.Process(chunk, _writer);
+                var chunk = _prefetcher.ReadNext();
+                if (chunk == null)
+                {
+                    continue;
+                }
+                semaphore.Wait();
+                processor.Process(chunk, _writer, semaphore);
             }
 
             _writer.Close();
+        }
+
+        private void ProcessInternal()
+        {
+            while (true)
+            {
+
+            }
+        }
+
+        private void PrefetcherOnEnded(object sender, EventArgs e)
+        {
+            _readEndedEvent.Set();
         }
     }
 }

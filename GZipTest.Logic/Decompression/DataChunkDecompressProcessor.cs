@@ -1,11 +1,12 @@
 ﻿using System.IO;
 using System.IO.Compression;
+using System.Threading;
 
 namespace GZipTest.Logic.Decompression
 {
     internal class DataChunkDecompressProcessor : IDataChunkProcessor
     {
-        public void Process(DataChunk chunk, OrderedWriter writer)
+        public void Process(DataChunk chunk, OrderedWriter writer, SemaphoreSlim semaphore)
         {
             DataChunk processed;
             using (var compressedStream = new MemoryStream(chunk.Data))
@@ -16,6 +17,7 @@ namespace GZipTest.Logic.Decompression
                 processed = new DataChunk(chunk.Number, decompressedStream.ToArray());
             }
 
+            semaphore.Release();
             writer.Append(processed);
         }
     }

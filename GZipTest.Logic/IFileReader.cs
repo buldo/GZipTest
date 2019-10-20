@@ -2,6 +2,6 @@
 {
     internal interface IFileReader
     {
-        public DataChunk ReadNext();
+        DataChunk ReadNext();
     }
 }
