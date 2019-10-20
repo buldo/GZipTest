@@ -13,6 +13,8 @@ namespace GZipTest.Logic.Tests
         [Test]
         public void CompressDecompressTest()
         {
+            const int chunkSize = 1048576;
+
             const string inFile = "original.dat";
             if (!File.Exists(inFile))
             {
@@ -26,15 +28,16 @@ namespace GZipTest.Logic.Tests
                 File.Delete(compressed);
             }
 
-            compressor.Compress(inFile, compressed);
+            compressor.Compress(inFile, compressed, chunkSize);
 
-            var decomressor = new Decompressor();
+            var decompressor = new Decompressor();
             const string decompressed = "decompressed.dat";
             if (!File.Exists(decompressed))
             {
                 File.Delete(decompressed);
             }
-            decomressor.Decompress(compressed, decompressed);
+
+            decompressor.Decompress(compressed, decompressed, chunkSize);
 
             FileAssert.AreEqual(inFile, decompressed);
         }

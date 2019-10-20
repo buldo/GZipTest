@@ -10,10 +10,10 @@ namespace GZipTest.Logic.Compression
 
         private int _cnt = -1;
 
-        public FixedSizeReader(Stream readStream, int sizeInMb)
+        public FixedSizeReader(Stream readStream, int chunkSize)
         {
             _readStream = readStream;
-            _sizeInBytes = sizeInMb * 1048576;
+            _sizeInBytes = chunkSize;
         }
 
         public DataChunk ReadNext()
