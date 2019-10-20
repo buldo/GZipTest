@@ -13,13 +13,13 @@ namespace GZipTest.Logic
         private readonly Stream _writeStream;
         private readonly IEncoder _formatter;
         private int _lastWritten = -1;
-        private bool _isEnded = false;
+        private volatile bool _isEnded = false;
 
         public OrderedWriter(Stream stream, IEncoder formatter)
         {
             _writeStream = stream;
             _formatter = formatter;
-            _writeThread = new Thread(Write);
+            _writeThread = new Thread(Write) {IsBackground = true};
             _dataChunks = new SortedSet<DataChunk>(DataChunksComparer.Default);
             _writeThread.Start();
         }
@@ -47,7 +47,7 @@ namespace GZipTest.Logic
             {
                 _resetEvent.Wait();
                 DataChunk next;
-                lock (_dataChunks)
+                lock (_bufferLock)
                 {
                     if (_isEnded && _dataChunks.Count == 0)
                     {
@@ -60,13 +60,14 @@ namespace GZipTest.Logic
                         continue;
                     }
 
-                    if(_dataChunks.Min.Number != _lastWritten + 1)
+                    var min = _dataChunks.Min;
+                    if (min == null || min.Number != _lastWritten + 1)
                     {
                         _resetEvent.Reset();
                         continue;
                     }
 
-                    next = _dataChunks.Min;
+                    next = min;
                     _dataChunks.Remove(next);
                 }
 

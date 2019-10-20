@@ -20,7 +20,7 @@ namespace GZipTest.Logic
             _reader = reader;
             _batchSize = batchSize;
             _toBePrefetched = prefetchedBatches * batchSize;
-            _readThread = new Thread(Read){IsBackground = true};
+            _readThread = new Thread(Read) {IsBackground = true};
             _readThread.Start();
         }
 

@@ -13,7 +13,7 @@ namespace GZipTest.Logic
                 var reader = new FixedSizeReader(readStream, 1);
                 var writer = new OrderedWriter(writeStream, new CompressedFormatter());
 
-                var worker = new Worker(reader, writer, () => new DataChunkCompressProcessor());
+                var worker = new Worker(reader, writer, new DataChunkCompressProcessor());
                 worker.Process();
             }
         }

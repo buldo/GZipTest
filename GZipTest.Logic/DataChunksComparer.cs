@@ -9,6 +9,10 @@ namespace GZipTest.Logic
 
         public int Compare([AllowNull] DataChunk x, [AllowNull] DataChunk y)
         {
+            if (x == null || y == null)
+            {
+
+            }
             return x.Number.CompareTo(y.Number);
         }
     }
