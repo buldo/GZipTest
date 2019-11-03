@@ -1,7 +1,9 @@
-﻿namespace GZipTest.Logic
+﻿using System;
+
+namespace GZipTest.Logic
 {
     internal interface IDataChunkProcessor
     {
-        void Process(DataChunk chunk, OrderedWriter writer);
+        void Process(DataChunk originalChunk, OrderedWriter writer);
     }
 }

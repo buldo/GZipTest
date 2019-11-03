@@ -7,13 +7,19 @@ namespace GZipTest.Logic
     {
         public void Decompress(string input, string output, int decompressedClunkSize)
         {
+            var chunksPool = new DataChunksPool();
+
             using (var readStream = new FileStream(input, FileMode.Open))
             using (var writeStream = new FileStream(output, FileMode.Create))
             {
-                var reader = new CompressedFileReader(readStream);
-                var writer = new OrderedWriter(writeStream, new PlainFormatter());
+                var reader = new CompressedFileReader(readStream, chunksPool.Get);
+                var writer = new OrderedWriter(writeStream, new PlainFormatter(), chunksPool.Return);
 
-                var worker = new Worker(reader, writer, new DataChunkDecompressProcessor(decompressedClunkSize));
+                var worker = new Worker(
+                    reader,
+                    writer,
+                    new DataChunkDecompressProcessor(decompressedClunkSize, chunksPool.Get),
+                    chunksPool.Return);
                 worker.Process();
             }
         }

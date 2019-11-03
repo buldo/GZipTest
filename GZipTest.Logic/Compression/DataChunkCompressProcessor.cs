@@ -1,4 +1,5 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
 using System.IO;
 using System.IO.Compression;
 
@@ -6,28 +7,30 @@ namespace GZipTest.Logic.Compression
 {
     internal class DataChunkCompressProcessor : IDataChunkProcessor
     {
-        private readonly ArrayPool<byte> _pool = ArrayPool<byte>.Shared;
+        private readonly Func<int, DataChunk> _chunksAllocator;
 
-        public void Process(DataChunk chunk, OrderedWriter writer)
+        public DataChunkCompressProcessor(
+            Func<int, DataChunk> chunksAllocator)
         {
-            var buffer = _pool.Rent(chunk.Data.Length * 2);
+            _chunksAllocator = chunksAllocator;
+        }
 
-            DataChunk processed;
-            using (var memoryStream = new MemoryStream(buffer))
+        public void Process(
+            DataChunk originalChunk,
+            OrderedWriter writer)
+        {
+            var processed = _chunksAllocator(originalChunk.Data.Length * 2);
+            using (var memoryStream = new MemoryStream(processed.Data))
             {
                 using(var gzStream = new GZipStream(memoryStream, CompressionLevel.Optimal, true))
                 {
-                    gzStream.Write(chunk.Data);
+                    gzStream.Write(originalChunk.Data, 0, originalChunk.Size);
                     gzStream.Flush();
                 }
+                processed.Size = (int)memoryStream.Position;
 
-                var compressed = new byte[memoryStream.Position];
-                memoryStream.Position = 0;
-                memoryStream.Read(compressed);
-                processed = new DataChunk(chunk.Number, compressed);
+                processed.Number = originalChunk.Number;
             }
-
-            _pool.Return(buffer);
 
             writer.Append(processed);
         }

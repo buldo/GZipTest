@@ -6,7 +6,7 @@ namespace GZipTest.Logic.Decompression
     {
         public void Write(Stream stream, DataChunk chunk)
         {
-            stream.Write(chunk.Data);
+            stream.Write(chunk.Data, 0, chunk.Size);
         }
     }
 }

@@ -7,6 +7,7 @@ namespace GZipTest.Logic
     {
         private readonly OrderedWriter _writer;
         private readonly IDataChunkProcessor _processor;
+        private readonly Action<DataChunk> _freeChunk;
         private readonly Prefetcher _prefetcher;
         private readonly Thread[] _workerThreads;
         private readonly ManualResetEventSlim _readEndedEvent = new ManualResetEventSlim(false);
@@ -14,12 +15,14 @@ namespace GZipTest.Logic
         public Worker(
             IFileReader fileReader,
             OrderedWriter writer,
-            IDataChunkProcessor processor)
+            IDataChunkProcessor processor,
+            Action<DataChunk> freeChunk)
         {
             _prefetcher = new Prefetcher(fileReader, 20, 5);
             _prefetcher.Ended += PrefetcherOnEnded;
             _writer = writer;
             _processor = processor;
+            _freeChunk = freeChunk;
             _workerThreads = new Thread[Environment.ProcessorCount];
             for(int i = 0; i < Environment.ProcessorCount; i++)
             {
@@ -54,6 +57,7 @@ namespace GZipTest.Logic
                 }
 
                 _processor.Process(chunk, _writer);
+                _freeChunk(chunk);
             }
         }
 

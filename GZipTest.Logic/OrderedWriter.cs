@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
@@ -12,13 +13,18 @@ namespace GZipTest.Logic
         private readonly Thread _writeThread;
         private readonly Stream _writeStream;
         private readonly IEncoder _formatter;
+        private readonly Action<DataChunk> _freeChunk;
         private int _lastWritten = -1;
         private volatile bool _isEnded = false;
 
-        public OrderedWriter(Stream stream, IEncoder formatter)
+        public OrderedWriter(
+            Stream stream,
+            IEncoder formatter,
+            Action<DataChunk> freeChunk)
         {
             _writeStream = stream;
             _formatter = formatter;
+            _freeChunk = freeChunk;
             _writeThread = new Thread(Write) {IsBackground = true};
             _dataChunks = new SortedSet<DataChunk>(DataChunksComparer.Default);
             _writeThread.Start();
@@ -72,6 +78,7 @@ namespace GZipTest.Logic
                 }
 
                 _formatter.Write(_writeStream, next);
+                _freeChunk(next);
                 _lastWritten++;
             }
 

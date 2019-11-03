@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 
@@ -7,39 +7,33 @@ namespace GZipTest.Logic.Decompression
     internal class DataChunkDecompressProcessor : IDataChunkProcessor
     {
         private readonly int _decompressedBufferSize;
-        private readonly ArrayPool<byte> _pool = ArrayPool<byte>.Shared;
+        private readonly Func<int, DataChunk> _chunksAllocator;
 
-        public DataChunkDecompressProcessor(int decompressedBufferSize)
+        public DataChunkDecompressProcessor(
+            int decompressedBufferSize,
+            Func<int, DataChunk> chunksAllocator)
         {
             _decompressedBufferSize = decompressedBufferSize;
+            _chunksAllocator = chunksAllocator;
         }
 
-        public void Process(DataChunk chunk, OrderedWriter writer)
+        public void Process(DataChunk originalChunk, OrderedWriter writer)
         {
             DataChunk processed;
-            using (var compressedStream = new MemoryStream(chunk.Data))
+            using (var compressedStream = new MemoryStream(originalChunk.Data,0,originalChunk.Size))
             using (var gzStream = new GZipStream(compressedStream, CompressionMode.Decompress))
             {
-                var buffer = RentBuffer();
-                using (var decompressedStream = new MemoryStream(buffer))
+                processed = _chunksAllocator(_decompressedBufferSize);
+                using (var decompressedStream = new MemoryStream(processed.Data))
                 {
                     gzStream.CopyTo(decompressedStream);
-
-                    var decompressed = new byte[decompressedStream.Position];
-                    decompressedStream.Position = 0;
-                    decompressedStream.Read(decompressed);
-                    processed = new DataChunk(chunk.Number, decompressed);
+                    processed.Size = (int)decompressedStream.Position; // Вроде не должны выбираться за пределы int
                 }
-
-                _pool.Return(buffer);
             }
 
-            writer.Append(processed);
-        }
+            processed.Number = originalChunk.Number;
 
-        private byte[] RentBuffer()
-        {
-            return _pool.Rent(_decompressedBufferSize);
+            writer.Append(processed);
         }
     }
 }

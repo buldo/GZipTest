@@ -7,8 +7,8 @@ namespace GZipTest.Logic.Compression
     {
         public void Write(Stream stream, DataChunk chunk)
         {
-            stream.Write(BitConverter.GetBytes(chunk.Data.Length));
-            stream.Write(chunk.Data);
+            stream.Write(BitConverter.GetBytes(chunk.Size));
+            stream.Write(chunk.Data, 0, chunk.Size);
         }
     }
 }

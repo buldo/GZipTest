@@ -7,33 +7,30 @@ namespace GZipTest.Logic.Compression
     {
         private readonly Stream _readStream;
         private readonly int _sizeInBytes;
+        private readonly Func<int, DataChunk> _chunksAllocator;
 
         private int _cnt = -1;
 
-        public FixedSizeReader(Stream readStream, int chunkSize)
+        public FixedSizeReader(Stream readStream, int chunkSize, Func<int, DataChunk> chunksAllocator)
         {
             _readStream = readStream;
             _sizeInBytes = chunkSize;
+            _chunksAllocator = chunksAllocator;
         }
 
         public DataChunk ReadNext()
         {
-            var buffer = new byte[_sizeInBytes];
-            var readed = _readStream.Read(buffer);
-            if (readed == 0)
+            var chunk = _chunksAllocator(_sizeInBytes);
+            chunk.Size = _readStream.Read(chunk.Data, 0, _sizeInBytes);
+            if (chunk.Size == 0)
             {
-                return null;
+                return null; // Такое будет происходить в конце файла. Так как у нас консольная утилита, то можем позволить небольшую утечку в конце чтения
             }
 
             _cnt++;
-            if (readed < buffer.Length)
-            {
-                var newBuffer = new byte[readed];
-                Array.Copy(buffer, 0, newBuffer, 0, readed);
-                buffer = newBuffer;
-            }
+            chunk.Number = _cnt;
 
-            return new DataChunk(_cnt, buffer);
+            return chunk;
         }
     }
 }

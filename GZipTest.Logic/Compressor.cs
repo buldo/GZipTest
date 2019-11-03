@@ -7,13 +7,15 @@ namespace GZipTest.Logic
     {
         public void Compress(string input, string output, int chunkSize)
         {
+            var chunksPool = new DataChunksPool();
+
             using (var readStream = new FileStream(input, FileMode.Open))
             using (var writeStream = new FileStream(output, FileMode.Create))
             {
-                var reader = new FixedSizeReader(readStream, chunkSize);
-                var writer = new OrderedWriter(writeStream, new CompressedFormatter());
+                var reader = new FixedSizeReader(readStream, chunkSize, chunksPool.Get);
+                var writer = new OrderedWriter(writeStream, new CompressedFormatter(), chunksPool.Return);
 
-                var worker = new Worker(reader, writer, new DataChunkCompressProcessor());
+                var worker = new Worker(reader, writer, new DataChunkCompressProcessor(chunksPool.Get), chunksPool.Return);
                 worker.Process();
             }
         }

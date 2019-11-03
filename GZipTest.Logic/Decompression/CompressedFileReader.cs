@@ -8,32 +8,35 @@ namespace GZipTest.Logic.Decompression
         private int _cnt = -1;
 
         private readonly Stream _readStream;
+        private readonly Func<int, DataChunk> _chunksAllocator;
 
-        public CompressedFileReader(Stream readStream)
+        public CompressedFileReader(Stream readStream, Func<int, DataChunk> chunksAllocator)
         {
             _readStream = readStream;
+            _chunksAllocator = chunksAllocator;
         }
 
         public DataChunk ReadNext()
         {
             var sizeArray = new byte[4];
-            var readed = _readStream.Read(sizeArray);
-            if(readed != 4)
+            var sizeReaded = _readStream.Read(sizeArray);
+            if(sizeReaded != 4)
             {
                 return null;
             }
 
             var size = BitConverter.ToInt32(sizeArray);
-            var buffer = new byte[size];
-            readed = _readStream.Read(buffer);
-            if (readed != size)
+            var chunk = _chunksAllocator(size);
+            chunk.Size = size;
+            var dataReaded = _readStream.Read(chunk.Data, 0, size);
+            if (dataReaded != size)
             {
                 throw new Exception("Файл повреждён");
             }
 
             _cnt++;
-
-            return new DataChunk(_cnt, buffer);
+            chunk.Number = _cnt;
+            return chunk;
         }
     }
 }

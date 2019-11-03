@@ -2,14 +2,10 @@
 {
     internal class DataChunk
     {
-        public DataChunk(long number, byte[] data)
-        {
-            Number = number;
-            Data = data;
-        }
+        public long Number { get; set; }
 
-        public long Number { get; }
+        public byte[] Data { get; set; }
 
-        public byte[] Data { get; }
+        public int Size { get; set; }
     }
 }
