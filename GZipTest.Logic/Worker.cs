@@ -23,8 +23,9 @@ namespace GZipTest.Logic
             _writer = writer;
             _processor = processor;
             _freeChunk = freeChunk;
-            _workerThreads = new Thread[Environment.ProcessorCount];
-            for(int i = 0; i < Environment.ProcessorCount; i++)
+            var threadsCount = Environment.ProcessorCount - 2;
+            _workerThreads = new Thread[threadsCount];
+            for(int i = 0; i < threadsCount; i++)
             {
                 _workerThreads[i] = new Thread(ProcessInternal) {IsBackground = true};
             }

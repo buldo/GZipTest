@@ -13,7 +13,7 @@ namespace GZipTest.Logic
             using (var writeStream = new FileStream(output, FileMode.Create))
             {
                 var reader = new FixedSizeReader(readStream, chunkSize, chunksPool.Get);
-                var writer = new OrderedWriter(writeStream, new CompressedFormatter(), chunksPool.Return);
+                var writer = new OrderedWriter(writeStream, new CompressedFormatter(), 10, chunksPool.Return);
 
                 var worker = new Worker(reader, writer, new DataChunkCompressProcessor(chunksPool.Get), chunksPool.Return);
                 worker.Process();
